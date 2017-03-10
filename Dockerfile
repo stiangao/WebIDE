@@ -72,20 +72,20 @@ RUN mkdir -p /usr/share/maven /usr/share/maven/ref \
     && mv yarn.js /usr/local/bin/yarn \
     && chmod +x /usr/local/bin/yarn \
     && apk del .build-deps-yarn \
-  && cd /opt/coding/WebIDE/frontend && \
-    npm install && \
-    npm run build && \
-    cd /opt/coding/WebIDE/frontend-webjars && \
-    mvn clean package && \
-    cd /opt/coding/WebIDE/backend && \
-    mvn clean package -Dmaven.test.skip=true && \
-    cp /opt/coding/WebIDE/backend/target/ide-backend.jar /opt/coding/ && \
-    mkdir /opt/coding/lib &&
-    cp -f /opt/coding/WebIDE/backend/src/main/resources/lib/* /opt/coding/lib/ && \
-    rm -fr /opt/coding/WebIDE \
-  && rm -fr $MAVEN_CONFIG && \
-    rm -f /usr/bin/mvn && \
-    rm -fr $MAVEN_HOME
+  && cd /opt/coding/WebIDE/frontend  \
+  && npm install \
+  && npm run build \
+  && cd /opt/coding/WebIDE/frontend-webjars \
+  && mvn clean package \
+  && cd /opt/coding/WebIDE/backend \
+  && mvn clean package -Dmaven.test.skip=true \
+  && cp /opt/coding/WebIDE/backend/target/ide-backend.jar /opt/coding/ \
+  && mkdir /opt/coding/lib \
+  && cp -f /opt/coding/WebIDE/backend/src/main/resources/lib/* /opt/coding/lib/ \
+  && rm -fr /opt/coding/WebIDE \
+    && rm -fr $MAVEN_CONFIG \
+    && rm -f /usr/bin/mvn \
+    && rm -fr $MAVEN_HOME
 
 EXPOSE 8080
 
