@@ -28,8 +28,7 @@ RUN chown -R coding /opt/coding/WebIDE && mkdir $HOME/.m2 \
     && cd /opt/coding/WebIDE/backend \
     && mvn clean package -Dmaven.test.skip=true \
     && cp /opt/coding/WebIDE/backend/target/ide-backend.jar /opt/coding/ \
-    && mkdir /opt/coding/lib \
-    && cp -f /opt/coding/WebIDE/backend/src/main/resources/lib/* /opt/coding/lib/ \
+    && cp -fr /opt/coding/WebIDE/backend/src/main/resources/lib /opt/coding/ \
     && rm -fr /opt/coding/WebIDE \
     && rm -fr $HOME/.m2
 
