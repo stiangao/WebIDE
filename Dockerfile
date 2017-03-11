@@ -24,7 +24,7 @@ RUN chown -R coding /opt/coding/WebIDE && mkdir $HOME/.m2 \
     && cd /opt/coding/WebIDE/frontend  \
     && npm install && npm run build \
     && cd /opt/coding/WebIDE/frontend-webjars \
-    && mvn clean package \
+    && mvn clean install \
     && cd /opt/coding/WebIDE/backend \
     && mvn clean package -Dmaven.test.skip=true \
     && cp /opt/coding/WebIDE/backend/target/ide-backend.jar /opt/coding/ \
