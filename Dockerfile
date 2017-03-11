@@ -1,45 +1,42 @@
-FROM node:7-alpine
+FROM mratin/maven-node-alpine
 
-RUN apk add --no-cache curl tar bash
+USER root
 
-ARG MAVEN_VERSION=3.3.9
-ARG USER_HOME_DIR="/root"
+RUN apk --update --upgrade add zsh
 
-ENV MAVEN_HOME /usr/share/maven
-ENV MAVEN_CONFIG "$USER_HOME_DIR/.m2"
+# Add user `coding`
+RUN adduser -D -h /home/coding -s /bin/zsh coding \
+	&& echo "coding:coding" | chpasswd 
+# Install git
+RUN apk --update add curl bash git perl
 
-VOLUME "$USER_HOME_DIR/.m2"
-
-ENV LANG C.UTF-8
-
-# add a simple script that can auto-detect the appropriate JAVA_HOME value
-# based on whether the JDK or only the JRE is installed
-RUN { \
-		echo '#!/bin/sh'; \
-		echo 'set -e'; \
-		echo; \
-		echo 'dirname "$(dirname "$(readlink -f "$(which javac || which java)")")"'; \
-	} > /usr/local/bin/docker-java-home \
-	&& chmod +x /usr/local/bin/docker-java-home
-ENV JAVA_HOME /usr/lib/jvm/java-1.8-openjdk
-ENV PATH $PATH:/usr/lib/jvm/java-1.8-openjdk/jre/bin:/usr/lib/jvm/java-1.8-openjdk/bin
-
-ENV JAVA_VERSION 8u121
-ENV JAVA_ALPINE_VERSION 8.121.13-r0
-
-RUN set -x \
-	&& apk add --no-cache \
-		openjdk8="$JAVA_ALPINE_VERSION" \
-	&& [ "$JAVA_HOME" = "$(docker-java-home)" ]
+ENV HOME /home/coding
+ENV SHELL /bin/zsh
+ENV TERM xterm
 
 ADD . /opt/coding/WebIDE
 
-RUN mkdir -p /usr/share/maven /usr/share/maven/ref \
-        && curl -fsSL http://apache.osuosl.org/maven/maven-3/$MAVEN_VERSION/binaries/apache-maven-$MAVEN_VERSION-bin.tar.gz \
-        | tar -xzC /usr/share/maven --strip-components=1 \
-        && ln -s /usr/share/maven/bin/mvn /usr/bin/mvn
+# Install oh-my-zsh
+RUN git clone git://github.com/robbyrussell/oh-my-zsh.git ~/.oh-my-zsh \
+	&& cp ~/.oh-my-zsh/templates/zshrc.zsh-template ~/.zshrc
 
+RUN chown -R coding /opt/coding/WebIDE && mkdir $HOME/.m2 \
+    && cd /opt/coding/WebIDE/frontend  \
+    && npm install && npm run build \
+    && cd /opt/coding/WebIDE/frontend-webjars \
+    && mvn clean package \
+    && cd /opt/coding/WebIDE/backend \
+    && mvn clean package -Dmaven.test.skip=true \
+    && cp /opt/coding/WebIDE/backend/target/ide-backend.jar /opt/coding/ \
+    && mkdir /opt/coding/lib \
+    && cp -f /opt/coding/WebIDE/backend/src/main/resources/lib/* /opt/coding/lib/ \
+    && rm -fr /opt/coding/WebIDE \
+    && rm -fr $HOME/.m2
+
+ENV CODING_IDE_HOME /home/coding/coding-ide-home
 
 EXPOSE 8080
 
-CMD ["mvn", "-v"]
+USER coding
+
+CMD ["java", "-jar", "/opt/coding/ide-backend.jar", "--PTY_LIB_FOLDER=/opt/coding/lib"]
